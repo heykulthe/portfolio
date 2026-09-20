@@ -2,32 +2,41 @@
 import Container from "@components/Container.astro";
 import Link from "@components/Link.astro";
 import { SITE } from "@consts";
+
+const { pathname } = Astro.url;
+
+const links = [
+  { href: "/about", label: "about" },
+  { href: "/work", label: "work" },
+  { href: "/projects", label: "projects" },
+];
+
+const isActive = (href: string) =>
+  pathname === href || pathname.startsWith(`${href}/`);
 ---
 
 <header>
   <Container>
-    <div class="flex flex-wrap gap-y-2 justify-between">
-      <Link href="/" underline={false}>
-        <div class="font-semibold">
-          {SITE.NAME}
-        </div>
+    <div class="flex flex-wrap items-center justify-between gap-y-3">
+      <Link href="/" underline={false} class="label text-ink hover:text-ink">
+        {SITE.NAME}
       </Link>
-      <nav class="flex gap-1">
-        <Link href="/blog">
-          blog
-        </Link>
-        <span>
-          {`/`}
-        </span>
-        <Link href="/work">
-          work
-        </Link>
-        <span>
-          {`/`}
-        </span>
-        <Link href="/projects">
-          projects
-        </Link>
+      <nav class="flex items-center gap-x-5">
+        {
+          links.map((link) => (
+            <Link
+              href={link.href}
+              underline={false}
+              aria-current={isActive(link.href) ? "page" : undefined}
+              class:list={[
+                "label",
+                isActive(link.href) ? "text-ink" : "text-ink/55 hover:text-ink",
+              ]}
+            >
+              {link.label}
+            </Link>
+          ))
+        }
       </nav>
     </div>
   </Container>

@@ -1,0 +1,102 @@
+---
+
+---
+
+<div
+  aria-hidden="true"
+  class="pointer-events-none fixed inset-0 z-0 select-none"
+  data-market-bg
+>
+  <canvas class="size-full" width="768" height="432" data-market-canvas></canvas>
+</div>
+
+<script>
+  import { subscribe, getHistory, isStatic, BAND, BAND_SIZE, type Column } from "@lib/live";
+  import { BASE_TICKS } from "@lib/market";
+
+  const W = 768;
+  const H = 432;
+  const COL = 1;
+  const DEPTH_ALPHA = 0.5;
+  const TRAIL_ALPHA = 1;
+
+  function init() {
+    const canvas = document.querySelector(
+      "[data-market-canvas]",
+    ) as HTMLCanvasElement | null;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d", { alpha: true });
+    if (!ctx) return;
+
+    let ink = "233 226 217";
+    let alpha = 0.075;
+
+    const readTheme = () => {
+      const root = getComputedStyle(document.documentElement);
+      ink = root.getPropertyValue("--ink").trim() || ink;
+
+      alpha = document.documentElement.classList.contains("dark") ? 0.075 : 0.065;
+    };
+
+    const rowH = Math.max(1, H / BAND_SIZE);
+    const y = (ticks: number) => ((BASE_TICKS + BAND - ticks) / BAND_SIZE) * H;
+
+    const drawColumn = (col: Column, x: number) => {
+      for (let i = 0; i < BAND_SIZE; i++) {
+        const q = col.qty[i];
+        if (!q) continue;
+
+        const a = Math.min(1, q / col.peak) * DEPTH_ALPHA * alpha;
+        ctx.fillStyle = `rgb(${ink} / ${a})`;
+        ctx.fillRect(x, y(BASE_TICKS - BAND + i), COL, rowH);
+      }
+      if (col.tradeTicks !== null) {
+        ctx.fillStyle = `rgb(${ink} / ${TRAIL_ALPHA * alpha})`;
+        ctx.fillRect(x, y(col.tradeTicks), COL, rowH);
+      }
+    };
+
+    const repaint = () => {
+      ctx.clearRect(0, 0, W, H);
+      const history = getHistory();
+      const cols = Math.ceil(W / COL);
+      const start = Math.max(0, history.length - cols);
+      for (let i = start; i < history.length; i++) {
+        drawColumn(history[i], (i - start) * COL);
+      }
+    };
+
+    readTheme();
+    repaint();
+
+    const unsubscribe = subscribe((col) => {
+      ctx.globalCompositeOperation = "copy";
+      ctx.drawImage(canvas, -COL, 0);
+      ctx.globalCompositeOperation = "source-over";
+      drawColumn(col, W - COL);
+    });
+
+    if (isStatic()) repaint();
+
+    const mo = new MutationObserver(() => {
+      readTheme();
+      repaint();
+    });
+    mo.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+
+    document.addEventListener(
+      "astro:before-swap",
+      () => {
+        unsubscribe();
+        mo.disconnect();
+      },
+      { once: true },
+    );
+  }
+
+  document.addEventListener("astro:page-load", init);
+</script>

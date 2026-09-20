@@ -3,157 +3,147 @@ import { getCollection } from "astro:content";
 import Container from "@components/Container.astro";
 import PageLayout from "@layouts/PageLayout.astro";
 import ArrowCard from "@components/ArrowCard.astro";
+import WorkEntry from "@components/WorkEntry.astro";
+import Section from "@components/Section.astro";
+import Orderbook from "@components/Orderbook.astro";
 import Link from "@components/Link.astro";
-import { dateRange } from "@lib/utils";
-import { SITE, HOME, SOCIALS } from "@consts";
-
-const blog = (await getCollection("blog"))
-  .filter(post => !post.data.draft)
-  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
-  .slice(0,SITE.NUM_POSTS_ON_HOMEPAGE);
+import { SITE, HOME, SOCIALS, HONOURS } from "@consts";
 
 const projects = (await getCollection("projects"))
-  .filter(project => !project.data.draft)
+  .filter((project) => !project.data.draft)
   .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
-  .slice(0,SITE.NUM_PROJECTS_ON_HOMEPAGE);
+  .slice(0, SITE.NUM_PROJECTS_ON_HOMEPAGE);
 
 const allwork = (await getCollection("work"))
-  .sort((a, b) => new Date(b.data.dateStart).valueOf() - new Date(a.data.dateStart).valueOf())
-  .slice(0,SITE.NUM_WORKS_ON_HOMEPAGE);
+  .sort(
+    (a, b) =>
+      new Date(b.data.dateStart).valueOf() - new Date(a.data.dateStart).valueOf(),
+  )
+  .slice(0, SITE.NUM_WORKS_ON_HOMEPAGE);
 
 const work = await Promise.all(
   allwork.map(async (item) => {
     const { Content } = await item.render();
     return { ...item, Content };
-  })
+  }),
 );
-
 ---
 
 <PageLayout title={HOME.TITLE} description={HOME.DESCRIPTION}>
   <Container>
-    <h4 class="animate font-semibold text-black dark:text-white">
-      Hi, I'm Nano <span class="text-xl">👋🏻</span> 
-    </h4>
-    <div class="space-y-16">
-      <section>
-        <article class="space-y-4">
-          <p class="animate">
-            I am a minimal, seo friendly, accessible portfolio and blog for developers. 
-            I am an even more lightweight version of my popular theme
-            <Link href="https://github.com/markhorn-dev/astro-sphere" aria-label="Astro Sphere on Github" external>
-              Astro Sphere
-            </Link>.
-            I have a lighthouse scores of 100 across the board for performance, 
-            accesibility, best practices and SEO.
+    <div class="space-y-24">
+      <section class="animate space-y-7">
+        <div class="space-y-4">
+          <h1 class="font-display text-5xl font-semibold leading-none tracking-tight text-ink sm:text-6xl">
+            {SITE.NAME}
+          </h1>
+          <p class="label text-ink/55">
+            {SITE.ROLE} &middot; {SITE.COMPANY} &middot; {SITE.LOCATION}
           </p>
-          <p class="animate">
-            I come packed with full type safety, a sitemap, an rss feed, markdown 
-            and mdx support (use components in your markdown) through astro integrations.
-            I am styled with tailwind and come preconfigured with light, dark and 
-            system/os theme preferences out of the box.
-          </p>
-          <p class="animate">
-            Visit
-            <Link href="https://github.com/markhorn-dev/astro-nano" aria-label="Astro Nano on Github" external>
-              Astro Nano on Github
-            </Link>
-            to fork the repository, read the docs or one-click deploy on Vercel or Netlify. 
-          </p>
-        </article>
-      </section>
-
-      <section class="animate space-y-6">
-        <div class="flex flex-wrap gap-y-2 items-center justify-between">
-          <h5 class="font-semibold text-black dark:text-white">
-            Latest posts
-          </h5>
-          <Link href="/blog">
-            See all posts
-          </Link>
         </div>
-        <ul class="flex flex-col gap-4">
-          {blog.map(post => (
-            <li>
-              <ArrowCard entry={post} />
-            </li>
-          ))}
-        </ul>
-      </section>
 
-      <section class="animate space-y-6">
-        <div class="flex flex-wrap gap-y-2 items-center justify-between">
-          <h5 class="font-semibold text-black dark:text-white">
-            Work Experience
-          </h5>
-          <Link href="/work">
-            See all work
-          </Link>
-        </div>
-        <ul class="flex flex-col space-y-4">
-          {work.map(entry => (
-            <li>
-              <div class="text-sm opacity-75">
-                {dateRange(entry.data.dateStart, entry.data.dateEnd)}
-              </div>
-              <div class="font-semibold text-black dark:text-white">
-                {entry.data.company}
-              </div>
-              <div class="text-sm opacity-75">
-                {entry.data.role}
-              </div>
-              <article>
-                <entry.Content />
-              </article>
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <section class="animate space-y-6">
-        <div class="flex flex-wrap gap-y-2 items-center justify-between">
-          <h5 class="font-semibold text-black dark:text-white">
-            Recent projects
-          </h5>
-          <Link href="/projects">
-            See all projects
-          </Link>
-        </div>
-        <ul class="flex flex-col gap-4">
-          {projects.map(project => (
-            <li>
-              <ArrowCard entry={project} />
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <section class="animate space-y-4">
-        <h5 class="font-semibold text-black dark:text-white">
-          Let's Connect
-        </h5>
-        <article>
+        <div class="max-w-measure space-y-5">
           <p>
-            If you want to get in touch with me about something or just to say hi,
-            reach out on social media or send me an email.
+            I&rsquo;m a software engineer at Juspay, where I work on payments
+            infrastructure. Payouts, card transaction flows, and the
+            deployment systems that keep all of it running.
           </p>
-        </article>
-        <ul class="flex flex-wrap gap-2">
-          {SOCIALS.map(SOCIAL => (
-            <li class="flex gap-x-2 text-nowrap">
-              <Link href={SOCIAL.HREF} external aria-label={`${SITE.NAME} on ${SOCIAL.NAME}`}>
-                {SOCIAL.NAME}
-              </Link>
-              {"/"}
-            </li>
-          ))}
-          <li class="line-clamp-1">
-            <Link href={`mailto:${SITE.EMAIL}`} aria-label={`Email ${SITE.NAME}`}>
-              {SITE.EMAIL}
-            </Link>
-          </li>
-        </ul>
+          <p>
+            Outside of work I spend most of my time closer to the metal. I&rsquo;ve
+            written a C compiler from scratch, a low latency orderbook in Rust,
+            and an options pricing library in C++. Metal is what I keep coming back to.
+          </p>
+        </div>
+
+        <div class="max-w-measure pt-2">
+          <Orderbook />
+        </div>
       </section>
+
+      <Section index="01" title="Experience" href="/work" label="all work">
+        <ul class="space-y-12">
+          {
+            work.map((entry) => (
+              <li>
+                <WorkEntry
+                  company={entry.data.company}
+                  role={entry.data.role}
+                  dateStart={entry.data.dateStart}
+                  dateEnd={entry.data.dateEnd}
+                >
+                  <article>
+                    <entry.Content />
+                  </article>
+                </WorkEntry>
+              </li>
+            ))
+          }
+        </ul>
+      </Section>
+
+      <Section index="02" title="Projects" href="/projects" label="all projects">
+        <ul class="-mt-5 border-t rule">
+          {
+            projects.map((project) => (
+              <li>
+                <ArrowCard entry={project} />
+              </li>
+            ))
+          }
+        </ul>
+      </Section>
+
+      <Section index="03" title="Honours">
+        <ul class="space-y-4">
+          {
+            HONOURS.map((honour) => (
+              <li class="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
+                <span class="text-ink">
+                  {honour.HREF ? (
+                    <Link href={honour.HREF} external>
+                      {honour.TITLE}
+                    </Link>
+                  ) : (
+                    honour.TITLE
+                  )}
+                </span>
+                <span class="label text-ink/55">{honour.DETAIL}</span>
+              </li>
+            ))
+          }
+        </ul>
+      </Section>
+
+      <Section index="04" title="Elsewhere">
+        <div class="space-y-7">
+          <p class="max-w-measure">
+            If you want to talk about cool tech, hire me, or rant about how
+            naive LLMs can sometimes be, email is the best way to reach me.
+          </p>
+          <ul class="space-y-3">
+            <li class="flex items-baseline gap-x-6">
+              <span class="label w-28 shrink-0 text-ink/50">email</span>
+              <Link href={`mailto:${SITE.EMAIL}`} aria-label={`Email ${SITE.NAME}`}>
+                {SITE.EMAIL}
+              </Link>
+            </li>
+            {
+              SOCIALS.map((social) => (
+                <li class="flex items-baseline gap-x-6">
+                  <span class="label w-28 shrink-0 text-ink/50">{social.NAME}</span>
+                  <Link
+                    href={social.HREF}
+                    external
+                    aria-label={`${SITE.NAME} on ${social.NAME}`}
+                  >
+                    {social.HREF.replace(/^https:\/\/(www\.)?/, "")}
+                  </Link>
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+      </Section>
     </div>
   </Container>
 </PageLayout>

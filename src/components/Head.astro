@@ -2,15 +2,16 @@
 import "../styles/global.css";
 import "@fontsource/inter/latin-400.css";
 import "@fontsource/inter/latin-600.css";
-import "@fontsource/lora/400.css";
-import "@fontsource/lora/600.css";
+import "@fontsource-variable/fraunces/wght.css";
+import "@fontsource/maple-mono/400.css";
+import "@fontsource/maple-mono/500.css";
 import inter400 from "@fontsource/inter/files/inter-latin-400-normal.woff2";
 import inter600 from "@fontsource/inter/files/inter-latin-600-normal.woff2";
-import lora400 from "@fontsource/lora/files/lora-latin-400-normal.woff2";
-import lora600 from "@fontsource/lora/files/lora-latin-600-normal.woff2";
+import fraunces from "@fontsource-variable/fraunces/files/fraunces-latin-wght-normal.woff2";
+import maple400 from "@fontsource/maple-mono/files/maple-mono-latin-400-normal.woff2";
 
 import { ClientRouter } from "astro:transitions";
-import { SITE } from "@consts";
+import { SITE, SOCIALS, EDUCATION, SKILLS } from "@consts";
 
 interface Props {
   title: string;
@@ -20,49 +21,75 @@ interface Props {
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 
-const { title, description, image = "/nano.png" } = Astro.props;
+const { title, description, image = "/og.png" } = Astro.props;
+
+const pageTitle =
+  title === SITE.NAME ? `${SITE.NAME} | ${SITE.ROLE}` : `${title} | ${SITE.NAME}`;
+
+const isHome = Astro.url.pathname === "/";
+
+const person = {
+  "@context": "https://schema.org",
+  "@type": "Person",
+  name: SITE.NAME,
+  url: Astro.site?.href,
+  image: new URL(image, Astro.site).href,
+  email: `mailto:${SITE.EMAIL}`,
+  jobTitle: SITE.ROLE,
+  description,
+  worksFor: { "@type": "Organization", name: SITE.COMPANY },
+  alumniOf: { "@type": "CollegeOrUniversity", name: EDUCATION.SCHOOL },
+  address: { "@type": "PostalAddress", addressCountry: "IN" },
+  knowsAbout: SKILLS.flatMap((g) => g.ITEMS),
+  sameAs: SOCIALS.map((s) => s.HREF),
+};
 ---
 
-<!-- Global Metadata -->
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<link rel="icon" type="image/svg+xml" href="/favicon-dark.svg" media="(prefers-color-scheme: dark)">
-<link rel="icon" type="image/svg+xml" href="/favicon-light.svg" media="(prefers-color-scheme: light)">
-<link rel="icon" type="image/x-icon" href="/favicon-light.svg">
+<link rel="icon" type="image/svg+xml" href="/favicon-dark.svg" media="(prefers-color-scheme: dark)" />
+<link rel="icon" type="image/svg+xml" href="/favicon-light.svg" media="(prefers-color-scheme: light)" />
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+<meta name="theme-color" content="#f6f2eb" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="#0d0c0b" media="(prefers-color-scheme: dark)" />
 <meta name="generator" content={Astro.generator} />
 
-<!-- Font preloads -->
 <link rel="preload" href={inter400} as="font" type="font/woff2" crossorigin/>
 <link rel="preload" href={inter600} as="font" type="font/woff2" crossorigin/>
-<link rel="preload" href={lora400} as="font" type="font/woff2" crossorigin/>
-<link rel="preload" href={lora600} as="font" type="font/woff2" crossorigin/>
+<link rel="preload" href={fraunces} as="font" type="font/woff2" crossorigin/>
+<link rel="preload" href={maple400} as="font" type="font/woff2" crossorigin/>
 
-<!-- Canonical URL -->
 <link rel="canonical" href={canonicalURL} />
 
-<!-- Primary Meta Tags -->
-<title>{title}</title>
-<meta name="title" content={title} />
+<title>{pageTitle}</title>
+<meta name="title" content={pageTitle} />
 <meta name="description" content={description} />
+<meta name="author" content={SITE.NAME} />
+<meta name="robots" content="index, follow" />
 
-<!-- Open Graph / Facebook -->
-<meta property="og:type" content="website" />
-<meta property="og:url" content={Astro.url} />
-<meta property="og:title" content={title} />
+<meta property="og:type" content={isHome ? "profile" : "website"} />
+<meta property="og:site_name" content={SITE.NAME} />
+<meta property="og:locale" content="en_US" />
+<meta property="og:url" content={canonicalURL} />
+<meta property="og:title" content={pageTitle} />
 <meta property="og:description" content={description} />
-<meta property="og:image" content={new URL(image, Astro.url)} />
+<meta property="og:image" content={new URL(image, Astro.site)} />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content={`${SITE.NAME}, ${SITE.ROLE}`} />
 
-<!-- Twitter -->
-<meta property="twitter:card" content="summary_large_image" />
-<meta property="twitter:url" content={Astro.url} />
-<meta property="twitter:title" content={title} />
-<meta property="twitter:description" content={description} />
-<meta property="twitter:image" content={new URL(image, Astro.url)} />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:url" content={canonicalURL} />
+<meta name="twitter:title" content={pageTitle} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:image" content={new URL(image, Astro.site)} />
 
 <ClientRouter  />
 
-<!-- RSS Link -->
 <link rel="alternate" type="application/rss+xml" title={SITE.NAME} href={new URL("rss.xml", Astro.site)} />
+
+{isHome && <script type="application/ld+json" is:inline set:html={JSON.stringify(person)} />}
 
 <script>
   import type { TransitionBeforeSwapEvent } from "astro:transitions/client";

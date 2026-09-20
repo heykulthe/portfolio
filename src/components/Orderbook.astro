@@ -1,0 +1,164 @@
+---
+
+import { Market, formatPrice, formatMid, priceOf } from "@lib/market";
+import { SEED, WARM } from "@lib/live";
+
+const LEVELS = 7;
+
+const seedMarket = new Market(SEED);
+for (let i = 0; i < WARM; i++) seedMarket.step();
+const snap = seedMarket.snapshot(LEVELS);
+
+const depth = (qty: number) => `${Math.round((qty / snap.peak) * 72)}%`;
+const fmtQty = (n: number) => (n > 0 ? n.toLocaleString("en-US") : "");
+const priceTone = (qty: number) => (qty > 0 ? "text-ink/60" : "text-ink/25");
+---
+
+<figure class="animate not-prose rounded-sm border p-5 rule sm:p-6" data-orderbook>
+  <figcaption class="sr-only">
+    A live limit order book. Orders are matched in the browser with price-time
+    priority; the prices move because resting liquidity is being consumed.
+  </figcaption>
+
+  <div class="flex items-baseline justify-between gap-4 pb-4">
+    <span class="label text-ink/75">L2 Book</span>
+    <span class="label text-ink/45" data-ob-stat>matching</span>
+  </div>
+
+  <ol class="space-y-px" aria-hidden="true" data-ob-asks>
+    {
+      [...snap.asks].reverse().map((lvl) => (
+        <li class="relative flex items-baseline justify-between gap-6 px-2 py-1">
+          <span
+            class="absolute inset-y-0 right-0 bg-ink/[0.07]"
+            style={`width:${depth(lvl.qty)}`}
+            data-ob-bar
+          />
+          <span class:list={["label relative", priceTone(lvl.qty)]} data-ob-price>
+            {formatPrice(lvl.priceTicks)}
+          </span>
+          <span class="label relative text-ink/60" data-ob-size>
+            {fmtQty(lvl.qty)}
+          </span>
+        </li>
+      ))
+    }
+  </ol>
+
+  <div class="my-2 flex items-baseline justify-between gap-4 border-y px-2 py-2 rule">
+    <span class="label text-ink" data-ob-mid>
+      {snap.midTicks === null ? "" : formatMid(snap.midTicks)}
+    </span>
+    <span class="label text-ink/45">
+      spread <span data-ob-spread>
+        {snap.spreadTicks === null ? "" : priceOf(snap.spreadTicks).toFixed(2)}
+      </span>
+    </span>
+  </div>
+
+  <ol class="space-y-px" aria-hidden="true" data-ob-bids>
+    {
+      snap.bids.map((lvl) => (
+        <li class="relative flex items-baseline justify-between gap-6 px-2 py-1">
+          <span
+            class="absolute inset-y-0 right-0 bg-ink/[0.07]"
+            style={`width:${depth(lvl.qty)}`}
+            data-ob-bar
+          />
+          <span class:list={["label relative", priceTone(lvl.qty)]} data-ob-price>
+            {formatPrice(lvl.priceTicks)}
+          </span>
+          <span class="label relative text-ink/60" data-ob-size>
+            {fmtQty(lvl.qty)}
+          </span>
+        </li>
+      ))
+    }
+  </ol>
+</figure>
+
+<style>
+  [data-orderbook] [data-ob-bar] {
+    transition: width 200ms ease-out;
+  }
+  [data-orderbook] [data-ob-price],
+  [data-orderbook] [data-ob-size] {
+    transition: color 320ms ease-out;
+  }
+  [data-orderbook] li[data-hit] [data-ob-price],
+  [data-orderbook] li[data-hit] [data-ob-size] {
+    color: rgb(var(--ink));
+    transition: color 0ms;
+  }
+</style>
+
+<script>
+  import { subscribe } from "@lib/live";
+  import { formatPrice, formatMid, priceOf, type Snapshot } from "@lib/market";
+
+  function init() {
+    const root = document.querySelector("[data-orderbook]");
+    if (!root) return;
+
+    const askRows = [...root.querySelectorAll("[data-ob-asks] li")].reverse();
+    const bidRows = [...root.querySelectorAll("[data-ob-bids] li")];
+    const midEl = root.querySelector("[data-ob-mid]") as HTMLElement;
+    const spreadEl = root.querySelector("[data-ob-spread]") as HTMLElement;
+    const statEl = root.querySelector("[data-ob-stat]") as HTMLElement;
+
+    let cost = 0;
+
+    const paint = (
+      rows: Element[],
+      levels: Snapshot["bids"],
+      peak: number,
+      traded: Set<number>,
+    ) => {
+      for (let i = 0; i < rows.length; i++) {
+        const row = rows[i] as HTMLElement;
+        const lvl = levels[i];
+
+        if (!lvl) continue;
+
+        const price = row.querySelector("[data-ob-price]") as HTMLElement;
+        const size = row.querySelector("[data-ob-size]") as HTMLElement;
+        const bar = row.querySelector("[data-ob-bar]") as HTMLElement;
+
+        const px = formatPrice(lvl.priceTicks);
+        const qty = lvl.qty > 0 ? lvl.qty.toLocaleString("en-US") : "";
+        if (price.textContent !== px) price.textContent = px;
+        if (size.textContent !== qty) size.textContent = qty;
+        price.classList.toggle("text-ink/60", lvl.qty > 0);
+        price.classList.toggle("text-ink/25", lvl.qty === 0);
+        bar.style.width = `${Math.round((lvl.qty / peak) * 72)}%`;
+
+        if (traded.has(lvl.priceTicks)) {
+          row.setAttribute("data-hit", "");
+          window.setTimeout(() => row.removeAttribute("data-hit"), 90);
+        }
+      }
+    };
+
+    const unsubscribe = subscribe((column, snap) => {
+      const t0 = performance.now();
+      const traded: Set<number> = new Set();
+      if (column?.tradeTicks !== null && column?.tradeTicks !== undefined) {
+        traded.add(column.tradeTicks);
+      }
+
+      paint(askRows, snap.asks, snap.peak, traded);
+      paint(bidRows, snap.bids, snap.peak, traded);
+
+      midEl.textContent = snap.midTicks === null ? "" : formatMid(snap.midTicks);
+      spreadEl.textContent =
+        snap.spreadTicks === null ? "" : priceOf(snap.spreadTicks).toFixed(2);
+
+      cost = cost * 0.9 + (performance.now() - t0) * 0.1;
+      statEl.textContent = `${cost.toFixed(2)}ms`;
+    });
+
+    document.addEventListener("astro:before-swap", unsubscribe, { once: true });
+  }
+
+  document.addEventListener("astro:page-load", init);
+</script>

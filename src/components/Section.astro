@@ -1,0 +1,29 @@
+---
+import Link from "@components/Link.astro";
+
+type Props = {
+  index: string;
+  title: string;
+  href?: string;
+  label?: string;
+};
+
+const { index, title, href, label } = Astro.props;
+---
+
+<section class="animate space-y-6">
+  <div class="flex items-baseline justify-between gap-4 border-b pb-2 rule">
+    <h2 class="label text-ink/75">
+      <span class="text-ink/40">{index}</span>
+      <span class="ml-3">{title}</span>
+    </h2>
+    {
+      href && (
+        <Link href={href} underline={false} class="label text-ink/55 hover:text-ink">
+          {label ?? "all"} <span aria-hidden="true">&rarr;</span>
+        </Link>
+      )
+    }
+  </div>
+  <slot />
+</section>

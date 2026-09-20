@@ -1,0 +1,64 @@
+---
+import Container from "@components/Container.astro";
+import PageLayout from "@layouts/PageLayout.astro";
+import PageTitle from "@components/PageTitle.astro";
+import Section from "@components/Section.astro";
+import Link from "@components/Link.astro";
+import { SITE, ABOUT, EDUCATION, SKILLS } from "@consts";
+---
+
+<PageLayout title={ABOUT.TITLE} description={ABOUT.DESCRIPTION}>
+  <Container>
+    <div class="space-y-24">
+      <PageTitle index="about" title="About" />
+
+      <section class="animate max-w-measure space-y-5">
+        <p>
+          I&rsquo;m {SITE.NAME}, a software engineer at Juspay. I work mainly on payments
+          infrastructure and various payment/payout connectors and the deployment setup that 
+          lets all of it ship without downtime.
+        </p>
+        <p>
+          Before Juspay I was at HSBC, where I built a multithreaded ingestion
+          path feeding a prediction server, and moved a production workload off
+          local disk onto S3.
+        </p>
+        <p>
+          What I enjoy most is the layer below the usual software.
+        </p>
+        <p>
+          I also compete. I&rsquo;m an Expert on
+          <Link href="https://codeforces.com/profile/kulthe" external>Codeforces</Link>
+          with a max rating of 1627, and I placed 890th in Round 1 of Meta Hacker
+          Cup 2025.
+        </p>
+      </section>
+
+      <Section index="01" title="Education">
+        <div class="space-y-2">
+          <div class="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
+            <h3 class="font-display text-xl text-ink">{EDUCATION.SCHOOL}</h3>
+            <span class="label text-ink/55">{EDUCATION.YEARS}</span>
+          </div>
+          <div class="label text-ink/70">{EDUCATION.DEGREE}</div>
+          <div class="label text-ink/50">
+            {EDUCATION.DETAIL} &middot; {EDUCATION.LOCATION}
+          </div>
+        </div>
+      </Section>
+
+      <Section index="02" title="Tools">
+        <ul class="space-y-5">
+          {
+            SKILLS.map((group) => (
+              <li class="flex flex-col gap-2 sm:flex-row sm:items-baseline sm:gap-x-8">
+                <span class="label w-32 shrink-0 text-ink/50">{group.LABEL}</span>
+                <span class="text-ink/85">{group.ITEMS.join(", ")}</span>
+              </li>
+            ))
+          }
+        </ul>
+      </Section>
+    </div>
+  </Container>
+</PageLayout>

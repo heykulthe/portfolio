@@ -1,64 +1,61 @@
-![Astro Nano](_astro_nano.png)
+# heykulthe.github.io
 
-Astro Nano is a static, minimalist, lightweight, lightning fast portfolio and blog theme.
+Personal site and portfolio, built with [Astro](https://astro.build) and Tailwind.
 
-Built with Astro, Tailwind and Typescript, an no frameworks.
+## Content
 
-It was designed as an even more minimal theme than my popular theme [Astro Sphere](https://github.com/markhorn-dev/astro-sphere)
+Everything lives in content collections under `src/content`:
 
-## 🚀 Deploy your own
+- `work/` holds one file per role. Frontmatter: `company`, `role`, `dateStart`, `dateEnd`.
+  `dateEnd` takes a date or a string like `"Present"`.
+- `projects/` holds one file per project. Frontmatter: `title`, `description`, `date`,
+  and optional `tech`, `demoURL`, `repoURL`, `draft`.
 
-[![Deploy with Vercel](_deploy_vercel.svg)](https://vercel.com/new/clone?repository-url=https://github.com/markhorn-dev/astro-nano)  [![Deploy with Netlify](_deploy_netlify.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/markhorn-dev/astro-nano)
+Site wide facts (name, email, socials, education, honours, skills) live in
+`src/consts.ts` rather than in the templates.
 
-## 📋 Features
+## The order book
 
-- ✅ 100/100 Lighthouse performance
-- ✅ Responsive
-- ✅ Accessible
-- ✅ SEO-friendly
-- ✅ Typesafe
-- ✅ Minimal style
-- ✅ Light/Dark Theme
-- ✅ Animated UI
-- ✅ Tailwind styling
-- ✅ Auto generated sitemap
-- ✅ Auto generated RSS Feed
-- ✅ Markdown support
-- ✅ MDX Support (components in your markdown)
+`src/lib/orderbook.ts` is a real Level 2 limit order book with a matching
+engine, not an animation. The memory layout follows
+[charles-cooper/itch-order-book](https://github.com/charles-cooper/itch-order-book):
+signed prices so both sides sort descending and index 0 is always the best
+level, a stable level pool with the sorted arrays holding pointers into it, and
+orders carrying a direct handle to their level so cancel is one dereference.
+Matching adds a per level FIFO for price-time priority. Prices are integer
+ticks; there are no floats in the book.
 
-## 💯 Lighthouse score
-![Astro Nano Lighthouse Score](_lighthouse.png)
+`src/lib/market.ts` generates order flow. A fair value drifts, makers quote
+around it, and takers cross when fair value pulls away from the mid, so the
+touch moves because liquidity was consumed rather than because a price variable
+was assigned to.
 
-## 🕊️ Lightweight
-No frameworks or added bulk
+`src/lib/live.ts` runs one shared market. The ladder on the home page and the
+page background are two views of the same book. Warm-up replays the same seed
+and step count the server used, so the server rendered ladder and the client's
+first frame are the identical state.
 
-## ⚡︎ Fast
-Rendered in ~40ms on localhost
+## Design tokens
 
-## 📄 Configuration
+| Token  | Light     | Dark      |
+| ------ | --------- | --------- |
+| paper  | `#f6f2eb` | `#0d0c0b` |
+| ink    | `#141210` | `#e9e2d9` |
 
-The blog posts on the demo serve as the documentation and configuration.
+Type is Fraunces for display, Inter for body, Maple Mono for labels and metadata.
+All three are self hosted through Fontsource and preloaded.
 
-## 💻 Commands
+## Commands
 
-All commands are run from the root of the project, from a terminal:
+| Command               | Does                                  |
+| --------------------- | ------------------------------------- |
+| `npm run dev`         | Dev server on `localhost:4321`        |
+| `npm run dev:network` | Same, exposed on the LAN              |
+| `npm run build`       | `astro check` then a production build |
+| `npm run preview`     | Serve the built site                  |
+| `npm run lint`        | ESLint                                |
 
-Replace npm with your package manager of choice. `npm`, `pnpm`, `yarn`, `bun`, etc
+## Deploying
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run dev:network`     | Starts local dev server on local network         |
-| `npm run sync`            | Generates TypeScript types for all Astro modules.|
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run preview:network` | Preview build on local network                   |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
-| `npm run lint`            | Run ESLint                                       |
-| `npm run lint:fix`        | Auto-fix ESLint issues                           |
-
-## 🏛️ License
-
-MIT
+`astro.config.mjs` sets `site` to `https://heykulthe.github.io`. The sitemap, RSS
+feed and canonical URLs are derived from it, so update it if the domain changes.
