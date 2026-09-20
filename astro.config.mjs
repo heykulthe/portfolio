@@ -4,6 +4,6 @@ import sitemap from "@astrojs/sitemap";
 import tailwind from "@astrojs/tailwind";
 
 export default defineConfig({
-  site: "https://heykulthe.github.io",
+  site: "https://siddheshkulthe.vercel.app",
   integrations: [mdx(), sitemap(), tailwind()],
 });

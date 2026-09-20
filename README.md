@@ -1,4 +1,4 @@
-# heykulthe.github.io
+# siddheshkulthe.vercel.app
 
 Personal site and portfolio, built with [Astro](https://astro.build) and Tailwind.
 
@@ -57,5 +57,5 @@ All three are self hosted through Fontsource and preloaded.
 
 ## Deploying
 
-`astro.config.mjs` sets `site` to `https://heykulthe.github.io`. The sitemap, RSS
+`astro.config.mjs` sets `site` to `https://siddheshkulthe.vercel.app`. The sitemap, RSS
 feed and canonical URLs are derived from it, so update it if the domain changes.
